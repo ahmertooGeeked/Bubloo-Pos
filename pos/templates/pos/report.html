@@ -1,0 +1,51 @@
+{% extends 'pos/base.html' %}
+
+{% block content %}
+<div class="container p-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h1 class="fw-bold">📊 Daily Sales Report</h1>
+        <a href="/" class="btn btn-outline-dark rounded-pill">Back to POS</a>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="p-4 bg-primary text-white rounded-4 shadow-sm">
+                <h5>Total Revenue (Today)</h5>
+                <h1 class="display-4 fw-bold">Rs. {{ total_sales }}</h1>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-4 bg-white text-dark rounded-4 shadow-sm border">
+                <h5>Orders Completed</h5>
+                <h1 class="display-4 fw-bold">{{ order_count }}</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-4 shadow-sm p-4">
+        <h5 class="fw-bold mb-3">Today's Transactions</h5>
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Time</th>
+                    <th>Order ID</th>
+                    <th>Table</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.created_at|time:"H:i" }}</td>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.table.name }}</td>
+                    <td class="text-end fw-bold">Rs. {{ order.total_amount }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center py-4 text-muted">No sales yet today!</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

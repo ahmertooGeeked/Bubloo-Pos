@@ -1,0 +1,126 @@
+{% extends 'pos/base.html' %}
+
+{% block content %}
+<div class="container-fluid p-4 h-100 overflow-auto">
+
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="fw-bold text-dark m-0"><i class="fa-solid fa-layer-group text-primary me-3"></i>Floor Plan</h1>
+            <p class="text-muted small m-0">Live Table Status & Billing</p>
+        </div>
+        <div>
+            <a href="/" class="btn btn-white border shadow-sm rounded-pill px-4 fw-bold text-decoration-none text-dark">
+                <i class="fa-solid fa-cash-register me-2"></i>Back to POS
+            </a>
+        </div>
+    </div>
+
+    <div class="d-flex gap-4 mb-4 p-3 bg-white rounded-4 shadow-sm" style="width: fit-content;">
+        <div class="d-flex align-items-center">
+            <div class="rounded-circle bg-success me-2" style="width: 15px; height: 15px;"></div>
+            <span class="fw-bold text-muted small">Available</span>
+        </div>
+        <div class="d-flex align-items-center">
+            <div class="rounded-circle bg-danger me-2" style="width: 15px; height: 15px;"></div>
+            <span class="fw-bold text-muted small">Occupied</span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for item in tables %}
+        <div class="col-md-3 col-xl-2">
+
+            <div class="card h-100 border-0 shadow-sm rounded-4 text-center position-relative overflow-hidden
+                 {% if item.obj.status == 'occupied' %} table-occupied {% else %} table-available {% endif %}">
+
+                <div class="card-body py-4 d-flex flex-column align-items-center justify-content-between">
+
+                    <div class="w-100 d-flex flex-column align-items-center">
+                        <div class="mb-3 rounded-circle d-flex align-items-center justify-content-center shadow-sm
+                                    {% if item.obj.status == 'occupied' %} bg-danger text-white {% else %} bg-light text-success {% endif %}"
+                            style="width: 60px; height: 60px; font-size: 1.5rem;">
+                            {% if item.obj.status == 'occupied' %}
+                                <i class="fa-solid fa-utensils"></i>
+                            {% else %}
+                                <i class="fa-regular fa-square"></i>
+                            {% endif %}
+                        </div>
+
+                        <h5 class="fw-bold m-0 text-dark">{{ item.obj.name }}</h5>
+                    </div>
+
+                    <div class="w-100 mt-3">
+                        {% if item.obj.status == 'occupied' %}
+                            <span class="badge bg-danger rounded-pill px-3 mb-2">Occupied</span>
+
+                            {% if item.active_order %}
+                                <div class="bg-white rounded-3 p-2 border mb-3 shadow-sm">
+                                    <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Current Bill</small>
+                                    <h6 class="fw-bold text-danger m-0">Rs. {{ item.active_order.total_amount }}</h6>
+                                </div>
+
+                                <button onclick="checkoutTable({{ item.obj.id }})" class="btn btn-outline-danger btn-sm rounded-pill w-100 fw-bold">
+                                    <i class="fa-solid fa-check-double me-2"></i>Settle Bill
+                                </button>
+                            {% else %}
+                                <p class="small text-muted">No active order found.</p>
+                                <button onclick="checkoutTable({{ item.obj.id }})" class="btn btn-sm btn-light text-danger w-100">Force Free</button>
+                            {% endif %}
+
+                        {% else %}
+                            <span class="badge bg-success rounded-pill px-3 mb-2">Available</span>
+                            <p class="small text-muted m-0">4 Seats</p>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<style>
+    /* Green line at bottom for Available tables */
+    .table-available {
+        border-bottom: 5px solid #198754 !important;
+        transition: transform 0.2s;
+        cursor: default;
+    }
+    /* Lift up effect on hover */
+    .table-available:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Red line & Background for Occupied tables */
+    .table-occupied {
+        border-bottom: 5px solid #dc3545 !important;
+        background-color: #fff8f8; /* Very light red tint */
+    }
+</style>
+
+<script>
+    function checkoutTable(tableId) {
+        // 1. Confirm with the user
+        if(!confirm("Are you sure? This will mark the table as FREE and the bill as PAID.")) return;
+
+        // 2. Call the Django API
+        fetch(`/checkout/${tableId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'success') {
+                // 3. Reload page to update colors
+                location.reload();
+            } else {
+                alert("Error closing table: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Something went wrong!");
+        });
+    }
+</script>
+{% endblock %}
