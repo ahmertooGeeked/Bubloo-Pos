@@ -1,0 +1,6 @@
+Go to the project folder "pos", initialyze venv in your vscode terminal,
+run "python manage.py runserver"
+terminal will return a link http://127.0.0.1:8000/, run it and your in the Pos dashboard.
+for KOT -> http://127.0.0.1:8000/kitchen/
+for Table Management -> http://127.0.0.1:8000/tables/
+for sales report -> http://127.0.0.1:8000/report/
