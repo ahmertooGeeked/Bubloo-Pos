@@ -104,8 +104,9 @@
     </div>
 
     <div class="qr-code">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Order:{{ order.id }}-Amount:{{ order.total_amount }}" alt="QR Code">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://192.168.100.61:8000/invoice/{{ order.id }}/" alt="Scan for Invoice">
     </div>
+    <p style="text-align:center; font-size:10px; margin-top:-10px;">Scan for E-Receipt</p>
 
     <div class="footer">
         <p>Thank you for dining with us!</p>

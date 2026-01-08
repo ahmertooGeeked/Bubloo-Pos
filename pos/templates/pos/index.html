@@ -4,45 +4,53 @@
 <div class="container-fluid h-100 p-0">
     <div class="row g-0 h-100">
 
-        <div class="col-md-8 col-lg-8 h-100 d-flex flex-column p-4" style="min-width: 0;">
+        <div class="col-md-8 col-lg-8 h-100 d-flex flex-column position-relative" style="min-width: 0;">
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center gap-3">
-                    <div>
-                        <h2 class="fw-bold text-dark m-0">Bubloo Ki Sajji</h2>
-                        <p class="text-muted small m-0">POS System • <span id="current-date"></span></p>
+            <div class="sticky-top bg-light border-bottom shadow-sm px-4 pt-3 pb-2" style="z-index: 100;">
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+
+                    <div class="d-flex align-items-center gap-3">
+                        <div>
+                            <h2 class="fw-bold text-dark m-0 lh-1">Bubloo Ki Sajji</h2>
+                            <p class="text-muted small m-0">POS System • <span id="current-date"></span></p>
+                        </div>
+
+                        <div class="d-none d-md-flex gap-2">
+                            <a href="/kitchen/" target="_blank" class="btn btn-white border shadow-sm btn-sm rounded-pill px-3 fw-bold text-secondary text-decoration-none">
+                                <i class="fa-solid fa-fire-burner me-2 text-danger"></i>Kitchen
+                            </a>
+                            <a href="/tables/" class="btn btn-white border shadow-sm btn-sm rounded-pill px-3 fw-bold text-secondary text-decoration-none">
+                                <i class="fa-solid fa-user-tie me-2 text-primary"></i>Manager
+                            </a>
+                        </div>
                     </div>
-                    <a href="/kitchen/" target="_blank" class="btn btn-light text-secondary border shadow-sm btn-sm rounded-pill px-3">
-                        <i class="fa-solid fa-tv me-2"></i>Kitchen
-                    </a>
-                    <a href="/tables/" class="btn btn-light text-secondary border shadow-sm btn-sm rounded-pill px-3">
-                        <i class="fa-solid fa-layer-group me-2"></i>Manager
-                    </a>
+
+                    <div class="flex-grow-1" style="max-width: 300px;">
+                        <div class="input-group shadow-sm rounded-pill bg-white">
+                            <span class="input-group-text bg-white border-0 ps-3"><i class="fa fa-search text-muted"></i></span>
+                            <input type="text" id="search-input" class="form-control border-0 bg-transparent shadow-none" placeholder="Search menu..." onkeyup="filterMenu()">
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-white p-2 rounded-4 shadow-sm" style="width: 300px;">
-                    <div class="input-group">
-                        <span class="input-group-text bg-transparent border-0"><i class="fa fa-search text-muted"></i></span>
-                        <input type="text" id="search-input" class="form-control border-0 bg-transparent shadow-none" placeholder="Search menu..." onkeyup="filterMenu()">
-                    </div>
+
+                <div class="d-flex gap-2 overflow-auto pb-2" style="scrollbar-width: none;">
+                    <button class="btn btn-dark rounded-pill px-4 fw-bold flex-shrink-0 shadow-sm" onclick="filterCategory('all')">
+                        <i class="fa-solid fa-utensils me-2"></i>All Menu
+                    </button>
+
+                    {% for cat in categories %}
+                    <button class="btn btn-white bg-white border shadow-sm text-secondary rounded-pill px-4 fw-bold flex-shrink-0" onclick="filterCategory('{{ cat.id }}')">
+                        {{ cat.name }}
+                    </button>
+                    {% endfor %}
                 </div>
             </div>
 
-            <div class="d-flex gap-3 mb-4 overflow-auto no-scrollbar pb-2 align-items-center">
-                <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="filterCategory('all')" style="white-space: nowrap; flex-shrink: 0;">
-                    <i class="fa-solid fa-utensils me-2"></i>All Menu
-                </button>
-                {% for cat in categories %}
-                <button class="btn btn-white bg-white border-0 text-secondary rounded-pill px-4 fw-bold shadow-sm" onclick="filterCategory('{{ cat.id }}')" style="white-space: nowrap; flex-shrink: 0;">
-                    {{ cat.name }}
-                </button>
-                {% endfor %}
-            </div>
-
-            <div class="flex-grow-1 overflow-auto no-scrollbar pe-2">
+            <div class="flex-grow-1 overflow-auto p-4 bg-light">
                 <div class="row g-3" id="menu-grid">
                     {% for item in menu_items %}
                     <div class="col-md-4 col-lg-3 menu-item-card" data-category="{{ item.category.id }}" data-name="{{ item.name|lower }}">
-
                         <div class="card h-100 border-0 shadow-sm rounded-4 position-relative"
                              onclick="addToCart({{ item.id }}, '{{ item.name|escapejs }}', {{ item.price }})"
                              style="cursor: pointer; transition: transform 0.2s;">
@@ -70,7 +78,7 @@
             </div>
         </div>
 
-        <div class="col-md-4 col-lg-4 bg-white h-100 shadow-lg d-flex flex-column p-4" style="z-index: 10;">
+        <div class="col-md-4 col-lg-4 bg-white h-100 shadow-lg d-flex flex-column p-4" style="z-index: 200;">
 
             <h4 class="fw-bold mb-3">Order Details</h4>
 
@@ -121,6 +129,21 @@
             <div class="border-top pt-3">
 
                 <div class="mb-3">
+                    <label class="small text-muted fw-bold mb-2">Payment Method</label>
+                    <div class="d-flex gap-2">
+                        <input type="radio" class="btn-check" name="paymethod" id="pay-cash" value="cash" checked onchange="togglePaymentInput()">
+                        <label class="btn btn-outline-success flex-grow-1 fw-bold rounded-pill" for="pay-cash">
+                            <i class="fa-solid fa-money-bill me-2"></i>Cash
+                        </label>
+
+                        <input type="radio" class="btn-check" name="paymethod" id="pay-card" value="card" onchange="togglePaymentInput()">
+                        <label class="btn btn-outline-primary flex-grow-1 fw-bold rounded-pill" for="pay-card">
+                            <i class="fa-solid fa-credit-card me-2"></i>Card
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3" id="cash-input-section">
                     <label class="small text-muted fw-bold">Cash Received</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-0">Rs.</span>
@@ -168,7 +191,19 @@
         }
     }
 
-    // --- 2. LIVE CHANGE CALCULATOR ---
+    // --- 2. PAYMENT TOGGLE LOGIC ---
+    function togglePaymentInput() {
+        const isCash = document.getElementById('pay-cash').checked;
+        const cashSection = document.getElementById('cash-input-section');
+
+        if (isCash) {
+            cashSection.style.display = 'block';
+        } else {
+            cashSection.style.display = 'none';
+        }
+    }
+
+    // --- 3. LIVE CHANGE CALCULATOR ---
     function calculateChange() {
         const cash = parseFloat(document.getElementById('cash-input').value) || 0;
         const totalText = document.getElementById('cart-total').innerText.replace('Rs. ', '');
@@ -188,7 +223,7 @@
         }
     }
 
-    // --- 3. PLACE ORDER LOGIC ---
+    // --- 4. PLACE ORDER LOGIC ---
     function placeOrder() {
         if (cart.length === 0) { alert("Cart is empty!"); return; }
 
@@ -196,9 +231,13 @@
         const phone = document.getElementById('cust-phone').value;
         const cashGiven = document.getElementById('cash-input').value;
 
+        // Get selected payment method
+        const paymentMethod = document.querySelector('input[name="paymethod"]:checked').value;
+
         let payload = {
             cart: cart,
             order_type: currentOrderType,
+            payment_method: paymentMethod, // <--- Sent to server
             customer_name: name,
             customer_phone: phone,
             cash_given: cashGiven
@@ -231,7 +270,7 @@
         });
     }
 
-    // --- 4. CART FUNCTIONS ---
+    // --- 5. CART FUNCTIONS ---
     function addToCart(id, name, price) {
         const existingItem = cart.find(item => item.id === id);
         if (existingItem) { existingItem.quantity += 1; }

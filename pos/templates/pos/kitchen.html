@@ -54,10 +54,8 @@
         .btn-ready {
             background-color: #198754; /* Green for "Done" */
             border: none;
-            width: 100%;
             font-size: 1.1rem;
             font-weight: bold;
-            padding: 12px;
             border-radius: 10px;
         }
         .btn-ready:hover { background-color: #157347; }
@@ -110,9 +108,13 @@
                     </ul>
                 </div>
 
-                <div class="card-footer border-0 bg-transparent p-3 pt-0">
-                    <button onclick="markReady({{ order.id }})" class="btn btn-ready text-white shadow-sm">
-                        <i class="fa-solid fa-check me-2"></i>Mark Ready
+                <div class="card-footer border-0 bg-transparent p-3 pt-0 d-flex gap-2">
+                    <button onclick="cancelOrder({{ order.id }})" class="btn btn-outline-danger flex-grow-1 fw-bold shadow-sm py-3 rounded-3">
+                        <i class="fa-solid fa-ban me-2"></i>Reject
+                    </button>
+
+                    <button onclick="markReady({{ order.id }})" class="btn btn-ready flex-grow-1 text-white shadow-sm py-3 rounded-3">
+                        <i class="fa-solid fa-check me-2"></i>Ready
                     </button>
                 </div>
             </div>
@@ -137,7 +139,6 @@
 
         // 2. Mark Ready Logic
         function markReady(orderId) {
-            // Optional: Add a confirmation sound or popup if needed
             fetch(`/order-status/${orderId}/ready/`)
             .then(response => response.json())
             .then(data => {
@@ -147,6 +148,15 @@
                     alert("Error updating order.");
                 }
             });
+        }
+
+        // 3. Cancel/Reject Logic
+        function cancelOrder(id) {
+            if(confirm("Are you sure you want to REJECT this order?")) {
+                fetch(`/cancel-order/${id}/`)
+                .then(res => res.json())
+                .then(data => location.reload());
+            }
         }
     </script>
 </body>

@@ -1,4 +1,4 @@
-from datetime import datetime # <--- Add this import at the very top
+from datetime import datetime
 import json
 from decimal import Decimal
 from django.utils import timezone
@@ -7,8 +7,8 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, F # <--- Added F for database math
-from .models import Category, MenuItem, Table, Order, OrderItem
+from django.db.models import Sum, F
+from .models import Category, MenuItem, Table, Order, OrderItem, Shift, Expense
 
 # --- 1. AUTHENTICATION ---
 def custom_login(request):
@@ -49,10 +49,11 @@ def place_order(request):
             data = json.loads(request.body)
             cart = data.get('cart')
             order_type = data.get('order_type')
+            payment_method = data.get('payment_method', 'cash')
+
             customer_name = data.get('customer_name', '')
             customer_phone = data.get('customer_phone', '')
 
-            # Cash Handling
             cash_given_str = data.get('cash_given', '0')
             if not cash_given_str: cash_given_str = '0'
             cash_given = Decimal(str(cash_given_str))
@@ -60,7 +61,7 @@ def place_order(request):
             if not cart:
                 return JsonResponse({'status': 'error', 'message': 'Cart is empty'}, status=400)
 
-            # --- TABLE LOGIC ---
+            # Table Logic
             table = None
             if order_type == 'dine-in':
                 table_id = data.get('table_id')
@@ -73,14 +74,15 @@ def place_order(request):
                 except Table.DoesNotExist:
                     return JsonResponse({'status': 'error', 'message': 'Table not found'}, status=404)
 
-            # --- TAKEAWAY CHECK ---
+            # Takeaway Check
             if order_type == 'takeaway' and not customer_name:
                 return JsonResponse({'status': 'error', 'message': 'Name required for Takeaway'}, status=400)
 
-            # --- CREATE ORDER ---
+            # Create Order
             order = Order.objects.create(
                 table=table,
                 order_type=order_type,
+                payment_method=payment_method,
                 customer_name=customer_name,
                 customer_phone=customer_phone,
                 cash_given=cash_given,
@@ -88,14 +90,13 @@ def place_order(request):
                 total_amount=0
             )
 
-            # --- SAVE ITEMS ---
+            # Save Items
             total = Decimal('0.00')
             for item in cart:
                 try:
                     menu_item = MenuItem.objects.get(id=item['id'])
                     quantity = int(item['quantity'])
                     price = menu_item.price
-
                     OrderItem.objects.create(order=order, menu_item=menu_item, quantity=quantity, price=price)
                     total += (price * quantity)
                 except MenuItem.DoesNotExist:
@@ -104,13 +105,16 @@ def place_order(request):
             order.total_amount = total
 
             # Calculate Change
-            if cash_given >= total:
-                order.change_due = cash_given - total
+            if payment_method == 'cash':
+                if cash_given >= total:
+                    order.change_due = cash_given - total
+                else:
+                    order.change_due = Decimal('0.00')
             else:
                 order.change_due = Decimal('0.00')
+                order.cash_given = total
 
             order.save()
-
             return JsonResponse({'status': 'success', 'order_id': order.id})
 
         except Exception as e:
@@ -155,7 +159,6 @@ def table_dashboard(request):
         tables_data.append({'obj': table, 'active_order': active_order})
 
     active_takeaways = Order.objects.filter(order_type='takeaway', status__in=['pending', 'ready']).order_by('-created_at')
-
     return render(request, 'pos/tables.html', {'tables': tables_data, 'takeaways': active_takeaways})
 
 def checkout_table(request, table_id):
@@ -182,38 +185,36 @@ def settle_order(request, order_id):
     except Order.DoesNotExist:
         return JsonResponse({'status': 'error'}, status=404)
 
-# --- 7. REPORTS (DATE FILTERED) ---
+# --- 7. REPORTS (UPDATED TO SHOW CANCELLED ORDERS) ---
 @login_required(login_url='/login/')
 def sales_dashboard(request):
-    # 1. Check if user selected a date in the URL (e.g., ?date=2023-12-25)
+    # 1. Date Logic
     date_str = request.GET.get('date')
-
     if date_str:
         try:
-            # Convert text "2023-12-25" to a Date Object
             target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
-            # If invalid date, fallback to today
             target_date = timezone.now().date()
     else:
-        # Default to Today
         target_date = timezone.now().date()
 
-    # 2. Filter Orders by that Specific Date
+    # 2. Filter Orders: Get ALL orders for the date (Completed AND Cancelled), exclude Pending
     orders = Order.objects.filter(
-        created_at__date=target_date,
-        status='completed'
-    ).order_by('-created_at')
+        created_at__date=target_date
+    ).exclude(status='pending').order_by('-created_at')
 
-    # 3. Totals
-    total_sales = orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-    order_count = orders.count()
+    # 3. Calculate Totals (ONLY from Completed orders)
+    # We filter specifically for 'completed' here so Void orders don't add money
+    completed_orders = orders.filter(status='completed')
+
+    total_sales = completed_orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    order_count = completed_orders.count()
 
     return render(request, 'pos/report.html', {
         'total_sales': total_sales,
         'order_count': order_count,
-        'orders': orders,
-        'selected_date': target_date # Send the date back to the template
+        'orders': orders, # Sends ALL orders (including void) to the list
+        'selected_date': target_date
     })
 
 def generate_bill(request, order_id):
@@ -222,3 +223,82 @@ def generate_bill(request, order_id):
         return render(request, 'pos/bill.html', {'order': order})
     except Order.DoesNotExist:
         return HttpResponse("Order not found", status=404)
+
+# --- 8. SHIFT MANAGEMENT ---
+@login_required(login_url='/login/')
+def shift_dashboard(request):
+    active_shift = Shift.objects.filter(is_active=True).last()
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'start_shift':
+            opening_cash = Decimal(request.POST.get('opening_cash', '0'))
+            Shift.objects.create(opening_cash=opening_cash, is_active=True)
+            return redirect('shift_dashboard')
+
+        elif action == 'add_expense' and active_shift:
+            desc = request.POST.get('description')
+            amount = Decimal(request.POST.get('amount', '0'))
+            Expense.objects.create(shift=active_shift, description=desc, amount=amount)
+            return redirect('shift_dashboard')
+
+        elif action == 'close_shift' and active_shift:
+            actual_cash = Decimal(request.POST.get('actual_cash', '0'))
+            orders = Order.objects.filter(created_at__gte=active_shift.start_time, status='completed')
+            total_sales = orders.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0')
+            expenses = Expense.objects.filter(shift=active_shift)
+            total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or Decimal('0')
+            calculated_cash = active_shift.opening_cash + total_sales - total_expenses
+            difference = actual_cash - calculated_cash
+
+            active_shift.end_time = timezone.now()
+            active_shift.total_sales = total_sales
+            active_shift.total_expenses = total_expenses
+            active_shift.calculated_cash = calculated_cash
+            active_shift.actual_cash = actual_cash
+            active_shift.difference = difference
+            active_shift.is_active = False
+            active_shift.save()
+            return redirect('shift_dashboard')
+
+    context = {}
+    if active_shift:
+        orders = Order.objects.filter(created_at__gte=active_shift.start_time, status='completed')
+        current_sales = orders.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0')
+        expenses = Expense.objects.filter(shift=active_shift)
+        current_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or Decimal('0')
+        expected_cash = active_shift.opening_cash + current_sales - current_expenses
+        context = {
+            'shift': active_shift,
+            'current_sales': current_sales,
+            'current_expenses': current_expenses,
+            'expected_cash': expected_cash,
+            'expenses': expenses
+        }
+    else:
+        recent_shifts = Shift.objects.filter(is_active=False).order_by('-end_time')[:5]
+        context['recent_shifts'] = recent_shifts
+
+    return render(request, 'pos/shift.html', context)
+
+# --- 9. DIGITAL BILL ---
+def digital_bill(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        return render(request, 'pos/digital_bill.html', {'order': order})
+    except Order.DoesNotExist:
+        return HttpResponse("Invoice not found", status=404)
+
+# --- 10. CANCEL ORDER ---
+def cancel_order(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        order.status = 'cancelled'
+        order.save()
+        if order.table:
+            order.table.status = 'available'
+            order.table.save()
+        return JsonResponse({'status': 'success'})
+    except Order.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Order not found'}, status=404)

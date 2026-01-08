@@ -26,4 +26,6 @@ urlpatterns = [
 
     path('bill/<int:order_id>/', views.generate_bill, name='generate_bill'),
     path('order-success/<int:order_id>/', views.order_success, name='order_success'),
+    path('invoice/<int:order_id>/', views.digital_bill, name='digital_bill'),
+    path('cancel-order/<int:order_id>/', views.cancel_order, name='cancel_order'),
 ]

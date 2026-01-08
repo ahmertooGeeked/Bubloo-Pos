@@ -1,4 +1,5 @@
 {% extends 'pos/base.html' %}
+{% block title %}Manager Dashboard - Bubloo POS{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-4 h-100 overflow-hidden">
@@ -36,8 +37,12 @@
                                         <i class="fa-solid fa-print me-2"></i>Print Bill
                                     </a>
 
-                                    <button onclick="checkoutTable({{ item.obj.id }})" class="btn btn-outline-danger btn-sm rounded-pill w-100 fw-bold">
+                                    <button onclick="checkoutTable({{ item.obj.id }})" class="btn btn-outline-danger btn-sm rounded-pill w-100 fw-bold mb-2">
                                         Settle Bill
+                                    </button>
+
+                                    <button onclick="cancelOrder({{ item.active_order.id }})" class="btn btn-light text-danger btn-sm rounded-pill w-100 fw-bold border">
+                                        <i class="fa-solid fa-trash me-2"></i>Void Order
                                     </button>
                                 {% endif %}
                             {% else %}
@@ -70,8 +75,12 @@
                             <i class="fa-solid fa-print me-2"></i>Print Receipt
                         </a>
 
-                        <button onclick="settleOrder({{ order.id }})" class="btn btn-dark w-100 btn-sm rounded-pill">
+                        <button onclick="settleOrder({{ order.id }})" class="btn btn-dark w-100 btn-sm rounded-pill mb-2">
                             <i class="fa-solid fa-money-bill-wave me-2"></i>Collect Cash
+                        </button>
+
+                        <button onclick="cancelOrder({{ order.id }})" class="btn btn-light text-danger w-100 btn-sm rounded-pill border">
+                            <i class="fa-solid fa-trash me-2"></i>Void
                         </button>
                     </div>
                 </div>
@@ -114,6 +123,21 @@
                 alert("Error: " + data.message);
             }
         });
+    }
+
+    // 3. CANCEL / VOID ORDER (NEW)
+    function cancelOrder(orderId) {
+        if(confirm("DANGER: Void this order? This will remove it from active sales.")) {
+            fetch(`/cancel-order/${orderId}/`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert("Error: " + data.message);
+                }
+            });
+        }
     }
 </script>
 <script>
