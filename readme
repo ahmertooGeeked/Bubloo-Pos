@@ -4,3 +4,5 @@ terminal will return a link http://127.0.0.1:8000/, run it and your in the Pos d
 for KOT -> http://127.0.0.1:8000/kitchen/
 for Table Management -> http://127.0.0.1:8000/tables/
 for sales report -> http://127.0.0.1:8000/report/
+database is setup in postgresql
+dependencies are just django and pillow
