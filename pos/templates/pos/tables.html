@@ -1,126 +1,125 @@
 {% extends 'pos/base.html' %}
 
 {% block content %}
-<div class="container-fluid p-4 h-100 overflow-auto">
+<div class="container-fluid p-4 h-100 overflow-hidden">
 
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="fw-bold text-dark m-0"><i class="fa-solid fa-layer-group text-primary me-3"></i>Floor Plan</h1>
-            <p class="text-muted small m-0">Live Table Status & Billing</p>
+            <h1 class="fw-bold text-dark m-0"><i class="fa-solid fa-layer-group text-primary me-3"></i>Manager Dashboard</h1>
+            <p class="text-muted small m-0">Live Floor Plan & Active Orders</p>
         </div>
-        <div>
-            <a href="/" class="btn btn-white border shadow-sm rounded-pill px-4 fw-bold text-decoration-none text-dark">
-                <i class="fa-solid fa-cash-register me-2"></i>Back to POS
-            </a>
-        </div>
+        <a href="/" class="btn btn-white border shadow-sm rounded-pill px-4 fw-bold text-decoration-none text-dark">
+            <i class="fa-solid fa-cash-register me-2"></i>Back to POS
+        </a>
     </div>
 
-    <div class="d-flex gap-4 mb-4 p-3 bg-white rounded-4 shadow-sm" style="width: fit-content;">
-        <div class="d-flex align-items-center">
-            <div class="rounded-circle bg-success me-2" style="width: 15px; height: 15px;"></div>
-            <span class="fw-bold text-muted small">Available</span>
-        </div>
-        <div class="d-flex align-items-center">
-            <div class="rounded-circle bg-danger me-2" style="width: 15px; height: 15px;"></div>
-            <span class="fw-bold text-muted small">Occupied</span>
-        </div>
-    </div>
+    <div class="row h-100 pb-5">
 
-    <div class="row g-4">
-        {% for item in tables %}
-        <div class="col-md-3 col-xl-2">
+        <div class="col-md-9 h-100 overflow-auto no-scrollbar pe-4">
+            <h5 class="fw-bold text-muted mb-3">Dine-in Tables</h5>
 
-            <div class="card h-100 border-0 shadow-sm rounded-4 text-center position-relative overflow-hidden
-                 {% if item.obj.status == 'occupied' %} table-occupied {% else %} table-available {% endif %}">
+            <div class="row g-4">
+                {% for item in tables %}
+                <div class="col-md-3">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 text-center position-relative overflow-hidden
+                         {% if item.obj.status == 'occupied' %} table-occupied {% else %} table-available {% endif %}">
 
-                <div class="card-body py-4 d-flex flex-column align-items-center justify-content-between">
+                        <div class="card-body py-4 d-flex flex-column align-items-center justify-content-between">
+                            <h5 class="fw-bold m-0 text-dark">{{ item.obj.name }}</h5>
 
-                    <div class="w-100 d-flex flex-column align-items-center">
-                        <div class="mb-3 rounded-circle d-flex align-items-center justify-content-center shadow-sm
-                                    {% if item.obj.status == 'occupied' %} bg-danger text-white {% else %} bg-light text-success {% endif %}"
-                            style="width: 60px; height: 60px; font-size: 1.5rem;">
                             {% if item.obj.status == 'occupied' %}
-                                <i class="fa-solid fa-utensils"></i>
+                                {% if item.active_order %}
+                                    <h6 class="fw-bold text-danger mt-3">Rs. {{ item.active_order.total_amount }}</h6>
+                                    <small class="text-muted mb-3">{{ item.active_order.customer_name|default:"Guest" }}</small>
+
+                                    <a href="/bill/{{ item.active_order.id }}/" target="_blank" class="btn btn-secondary btn-sm rounded-pill w-100 mb-2 fw-bold">
+                                        <i class="fa-solid fa-print me-2"></i>Print Bill
+                                    </a>
+
+                                    <button onclick="checkoutTable({{ item.obj.id }})" class="btn btn-outline-danger btn-sm rounded-pill w-100 fw-bold">
+                                        Settle Bill
+                                    </button>
+                                {% endif %}
                             {% else %}
-                                <i class="fa-regular fa-square"></i>
+                                <span class="badge bg-success mt-3 rounded-pill">Available</span>
                             {% endif %}
                         </div>
-
-                        <h5 class="fw-bold m-0 text-dark">{{ item.obj.name }}</h5>
                     </div>
-
-                    <div class="w-100 mt-3">
-                        {% if item.obj.status == 'occupied' %}
-                            <span class="badge bg-danger rounded-pill px-3 mb-2">Occupied</span>
-
-                            {% if item.active_order %}
-                                <div class="bg-white rounded-3 p-2 border mb-3 shadow-sm">
-                                    <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Current Bill</small>
-                                    <h6 class="fw-bold text-danger m-0">Rs. {{ item.active_order.total_amount }}</h6>
-                                </div>
-
-                                <button onclick="checkoutTable({{ item.obj.id }})" class="btn btn-outline-danger btn-sm rounded-pill w-100 fw-bold">
-                                    <i class="fa-solid fa-check-double me-2"></i>Settle Bill
-                                </button>
-                            {% else %}
-                                <p class="small text-muted">No active order found.</p>
-                                <button onclick="checkoutTable({{ item.obj.id }})" class="btn btn-sm btn-light text-danger w-100">Force Free</button>
-                            {% endif %}
-
-                        {% else %}
-                            <span class="badge bg-success rounded-pill px-3 mb-2">Available</span>
-                            <p class="small text-muted m-0">4 Seats</p>
-                        {% endif %}
-                    </div>
-
                 </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-3 h-100 bg-white rounded-4 shadow-sm p-0 d-flex flex-column border">
+            <div class="p-3 border-bottom bg-light rounded-top-4">
+                <h5 class="fw-bold m-0"><i class="fa-solid fa-bag-shopping me-2 text-primary"></i>Takeaways</h5>
+                <small class="text-muted">{{ takeaways.count }} Pending Payment</small>
             </div>
 
-        </div>
-        {% endfor %}
-    </div>
+            <div class="flex-grow-1 overflow-auto p-3">
+                {% for order in takeaways %}
+                <div class="card border-0 shadow-sm mb-3 bg-light">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold text-dark">{{ order.customer_name }}</span>
+                            <span class="badge bg-warning text-dark">#{{ order.id }}</span>
+                        </div>
+                        <h5 class="fw-bold text-primary mb-3">Rs. {{ order.total_amount }}</h5>
 
+                        <a href="/bill/{{ order.id }}/" target="_blank" class="btn btn-outline-dark w-100 btn-sm rounded-pill mb-2">
+                            <i class="fa-solid fa-print me-2"></i>Print Receipt
+                        </a>
+
+                        <button onclick="settleOrder({{ order.id }})" class="btn btn-dark w-100 btn-sm rounded-pill">
+                            <i class="fa-solid fa-money-bill-wave me-2"></i>Collect Cash
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted mt-5 opacity-50">
+                    <i class="fa-solid fa-check-circle fa-3x mb-3"></i>
+                    <p>No active takeaways</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <style>
-    /* Green line at bottom for Available tables */
-    .table-available {
-        border-bottom: 5px solid #198754 !important;
-        transition: transform 0.2s;
-        cursor: default;
-    }
-    /* Lift up effect on hover */
-    .table-available:hover {
-        transform: translateY(-5px);
-    }
-
-    /* Red line & Background for Occupied tables */
-    .table-occupied {
-        border-bottom: 5px solid #dc3545 !important;
-        background-color: #fff8f8; /* Very light red tint */
-    }
+    .table-available { border-bottom: 5px solid #198754 !important; }
+    .table-occupied { border-bottom: 5px solid #dc3545 !important; background-color: #fff8f8; }
 </style>
 
 <script>
+    // 1. DINE-IN CHECKOUT
     function checkoutTable(tableId) {
-        // 1. Confirm with the user
-        if(!confirm("Are you sure? This will mark the table as FREE and the bill as PAID.")) return;
-
-        // 2. Call the Django API
+        if(!confirm("Settle Bill and Free Table?")) return;
         fetch(`/checkout/${tableId}/`)
+        .then(res => res.json())
+        .then(data => location.reload());
+    }
+
+    // 2. TAKEAWAY SETTLEMENT
+    function settleOrder(orderId) {
+        if(!confirm("Collect Cash and Close Order #" + orderId + "?")) return;
+
+        fetch(`/settle-order/${orderId}/`)
         .then(response => response.json())
         .then(data => {
             if(data.status === 'success') {
-                // 3. Reload page to update colors
                 location.reload();
             } else {
-                alert("Error closing table: " + data.message);
+                alert("Error: " + data.message);
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("Something went wrong!");
         });
     }
+</script>
+<script>
+    // Auto-Refresh every 5 seconds to show live table status
+    setTimeout(function(){
+       window.location.reload();
+    }, 5000);
 </script>
 {% endblock %}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Successful</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #198754 0%, #20c997 100%); height: 100vh; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
+        .success-card { background: white; width: 500px; border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .change-box { background-color: #f8f9fa; border: 2px dashed #ccc; padding: 20px; border-radius: 15px; margin: 20px 0; }
+        .amount-display { font-size: 3.5rem; font-weight: 800; color: #198754; }
+    </style>
+</head>
+<body>
+
+    <div class="success-card">
+        <div class="mb-3">
+            <i class="fa-solid fa-circle-check fa-5x text-success"></i>
+        </div>
+        <h2 class="fw-bold mb-4">Order Placed!</h2>
+
+        <div class="row g-2 mb-2">
+            <div class="col-6 text-end"><span class="text-muted">Total Bill:</span></div>
+            <div class="col-6 text-start"><span class="fw-bold">Rs. {{ order.total_amount }}</span></div>
+        </div>
+        <div class="row g-2">
+            <div class="col-6 text-end"><span class="text-muted">Cash Given:</span></div>
+            <div class="col-6 text-start"><span class="fw-bold">Rs. {{ order.cash_given }}</span></div>
+        </div>
+
+        <div class="change-box">
+            <h5 class="text-muted fw-bold mb-0">CHANGE DUE</h5>
+            <div class="amount-display">Rs. {{ order.change_due }}</div>
+        </div>
+
+        <div class="d-grid gap-3">
+            <button onclick="printAndClose()" class="btn btn-dark btn-lg rounded-pill fw-bold">
+                <i class="fa-solid fa-print me-2"></i>Print Receipt
+            </button>
+            <a href="/" class="btn btn-outline-secondary btn-lg rounded-pill fw-bold">
+                Next Order <i class="fa-solid fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Automatically open print window
+        function printAndClose() {
+            window.open("/bill/{{ order.id }}/", "_blank", "width=400,height=600");
+        }
+    </script>
+</body>
+</html>

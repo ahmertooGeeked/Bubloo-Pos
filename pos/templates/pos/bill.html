@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt #{{ order.id }}</title>
+    <style>
+        /* THERMAL PRINTER STYLING */
+        @media print {
+            @page { margin: 0; size: 80mm auto; } /* Set paper size */
+            body { margin: 0; padding: 0; }
+            .no-print { display: none; }
+        }
+
+        body {
+            font-family: 'Courier New', monospace; /* Monospace font looks authentic */
+            width: 80mm; /* Simulate paper width on screen */
+            margin: auto;
+            background: #fff;
+            padding: 10px;
+            color: #000;
+        }
+
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo { font-size: 24px; font-weight: bold; margin: 0; }
+        .info { font-size: 12px; margin: 5px 0; }
+
+        .divider { border-top: 2px dashed #000; margin: 10px 0; }
+
+        table { width: 100%; font-size: 12px; border-collapse: collapse; }
+        td, th { padding: 5px 0; text-align: left; }
+        .qty { width: 15%; text-align: center; }
+        .price { text-align: right; }
+
+        .total-section { text-align: right; font-size: 14px; font-weight: bold; margin-top: 10px; }
+
+        .footer { text-align: center; font-size: 10px; margin-top: 20px; }
+
+        /* QR Code Container */
+        .qr-code {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        img { width: 100px; height: 100px; } /* QR Size */
+    </style>
+</head>
+<body onload="window.print()">
+
+    <div class="no-print" style="text-align: center; margin-bottom: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">🖨️ Print Again</button>
+        <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">❌ Close</button>
+    </div>
+
+    <div class="header">
+        <h1 class="logo">BUBLOO KI SAJJI</h1>
+        <p class="info">Main Blvd, Islamabad<br>Ph: 0300-1234567</p>
+        <p class="info">
+            Date: {{ order.created_at|date:"d M Y" }}<br>
+            Time: {{ order.created_at|time:"H:i" }}<br>
+            <strong>Order #{{ order.id }}</strong>
+        </p>
+
+        <p class="info" style="border: 1px solid #000; padding: 5px; display: inline-block; margin-top: 5px;">
+            {% if order.order_type == 'dine-in' %}
+                DINE-IN ({{ order.table.name }})
+            {% else %}
+                TAKEAWAY ({{ order.customer_name }})
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="divider"></div>
+
+    <table>
+        <thead>
+            <tr style="border-bottom: 1px solid #000;">
+                <th class="qty">Qty</th>
+                <th>Item</th>
+                <th class="price">Amt</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items.all %}
+            <tr>
+                <td class="qty">{{ item.quantity }}</td>
+                <td>{{ item.menu_item.name }}</td>
+                <td class="price">{{ item.total_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="divider"></div>
+
+    <div class="total-section">
+        Subtotal: {{ order.total_amount }}<br>
+        Tax (0%): 0.00<br>
+        <span style="font-size: 18px;">TOTAL: Rs. {{ order.total_amount }}</span>
+
+        <div style="border-top: 1px dashed #000; margin-top: 5px; padding-top: 5px; font-size: 12px; font-weight: normal;">
+            Cash Given: Rs. {{ order.cash_given }}<br>
+            Change Due: Rs. {{ order.change_due }}
+        </div>
+    </div>
+
+    <div class="qr-code">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Order:{{ order.id }}-Amount:{{ order.total_amount }}" alt="QR Code">
+    </div>
+
+    <div class="footer">
+        <p>Thank you for dining with us!</p>
+        <p>Software by Bubloo POS</p>
+    </div>
+
+</body>
+</html>

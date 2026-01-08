@@ -7,9 +7,17 @@
         <div class="col-md-8 col-lg-8 h-100 d-flex flex-column p-4" style="min-width: 0;">
 
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2 class="fw-bold text-dark m-0">Bubloo Ki Sajji</h2>
-                    <p class="text-muted small m-0">POS System • <span id="current-date"></span></p>
+                <div class="d-flex align-items-center gap-3">
+                    <div>
+                        <h2 class="fw-bold text-dark m-0">Bubloo Ki Sajji</h2>
+                        <p class="text-muted small m-0">POS System • <span id="current-date"></span></p>
+                    </div>
+                    <a href="/kitchen/" target="_blank" class="btn btn-light text-secondary border shadow-sm btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-tv me-2"></i>Kitchen
+                    </a>
+                    <a href="/tables/" class="btn btn-light text-secondary border shadow-sm btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-layer-group me-2"></i>Manager
+                    </a>
                 </div>
                 <div class="bg-white p-2 rounded-4 shadow-sm" style="width: 300px;">
                     <div class="input-group">
@@ -20,16 +28,11 @@
             </div>
 
             <div class="d-flex gap-3 mb-4 overflow-auto no-scrollbar pb-2 align-items-center">
-                <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"
-                        onclick="filterCategory('all')"
-                        style="white-space: nowrap; flex-shrink: 0;">
+                <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="filterCategory('all')" style="white-space: nowrap; flex-shrink: 0;">
                     <i class="fa-solid fa-utensils me-2"></i>All Menu
                 </button>
-
                 {% for cat in categories %}
-                <button class="btn btn-white bg-white border-0 text-secondary rounded-pill px-4 fw-bold shadow-sm"
-                        onclick="filterCategory('{{ cat.id }}')"
-                        style="white-space: nowrap; flex-shrink: 0;">
+                <button class="btn btn-white bg-white border-0 text-secondary rounded-pill px-4 fw-bold shadow-sm" onclick="filterCategory('{{ cat.id }}')" style="white-space: nowrap; flex-shrink: 0;">
                     {{ cat.name }}
                 </button>
                 {% endfor %}
@@ -39,7 +42,8 @@
                 <div class="row g-3" id="menu-grid">
                     {% for item in menu_items %}
                     <div class="col-md-4 col-lg-3 menu-item-card" data-category="{{ item.category.id }}" data-name="{{ item.name|lower }}">
-                        <div class="card h-100 border-0 shadow-sm rounded-4"
+
+                        <div class="card h-100 border-0 shadow-sm rounded-4 position-relative"
                              onclick="addToCart({{ item.id }}, '{{ item.name|escapejs }}', {{ item.price }})"
                              style="cursor: pointer; transition: transform 0.2s;">
 
@@ -56,9 +60,7 @@
                                 <p class="text-muted small mb-2">{{ item.category.name }}</p>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="fw-bold text-primary">Rs. {{ item.price }}</span>
-                                    <button class="btn btn-sm btn-light text-primary rounded-circle">
-                                        <i class="fa fa-plus"></i>
-                                    </button>
+                                    <button class="btn btn-sm btn-light text-primary rounded-circle"><i class="fa fa-plus"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -70,22 +72,42 @@
 
         <div class="col-md-4 col-lg-4 bg-white h-100 shadow-lg d-flex flex-column p-4" style="z-index: 10;">
 
-            <div class="mb-4">
-                <h4 class="fw-bold mb-3">Order Details</h4>
-                <div class="row g-2">
-                    <div class="col-6">
-                        <select class="form-select border-0 bg-light rounded-3 py-2 fw-bold text-secondary">
-                            <option selected>Walk-in Customer</option>
-                        </select>
+            <h4 class="fw-bold mb-3">Order Details</h4>
+
+            <ul class="nav nav-pills nav-fill mb-3 p-1 bg-light rounded-pill">
+                <li class="nav-item">
+                    <a class="nav-link active rounded-pill fw-bold" id="tab-dine-in" onclick="setOrderType('dine-in')" href="#">
+                        <i class="fa-solid fa-chair me-2"></i>Dine-in
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link rounded-pill fw-bold text-muted" id="tab-takeaway" onclick="setOrderType('takeaway')" href="#">
+                        <i class="fa-solid fa-bag-shopping me-2"></i>Takeaway
+                    </a>
+                </li>
+            </ul>
+
+            <div class="mb-3">
+                <div class="mb-3">
+                    <label class="small text-muted fw-bold mb-1">Customer Details</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="text" id="cust-name" class="form-control bg-light border-0 fw-bold" placeholder="Name (e.g. Ali)">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" id="cust-phone" class="form-control bg-light border-0 fw-bold" placeholder="Phone (Optional)">
+                        </div>
                     </div>
-                    <div class="col-6">
-                        <select id="selected-table" class="form-select border-0 bg-light rounded-3 py-2 fw-bold text-primary">
-                            <option value="" selected disabled>Select Table</option>
-                            {% for table in tables %}
-                                <option value="{{ table.id }}">{{ table.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                </div>
+
+                <div id="dine-in-options">
+                    <label class="small text-muted fw-bold mb-1">Select Table</label>
+                    <select id="selected-table" class="form-select border-0 bg-light rounded-3 py-2 fw-bold text-primary">
+                        <option value="" selected disabled>Choose Table...</option>
+                        {% for table in tables %}
+                            <option value="{{ table.id }}">{{ table.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
 
@@ -97,19 +119,23 @@
             </div>
 
             <div class="border-top pt-3">
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Subtotal</span>
-                    <span class="fw-bold" id="cart-subtotal">Rs. 0.00</span>
+
+                <div class="mb-3">
+                    <label class="small text-muted fw-bold">Cash Received</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0">Rs.</span>
+                        <input type="number" id="cash-input" class="form-control bg-light border-0 fw-bold" placeholder="0" onkeyup="calculateChange()">
+                    </div>
+                    <div class="d-flex justify-content-between mt-2 px-1">
+                        <small class="text-muted">Change Due:</small>
+                        <small class="fw-bold text-success" id="change-display">Rs. 0.00</small>
+                    </div>
                 </div>
-                <div class="d-flex justify-content-between mb-3">
-                    <span class="text-muted">Tax (0%)</span>
-                    <span class="fw-bold">Rs. 0.00</span>
-                </div>
+
                 <div class="d-flex justify-content-between mb-4">
                     <span class="fs-4 fw-bold text-dark">Total</span>
                     <span class="fs-4 fw-bold text-primary" id="cart-total">Rs. 0.00</span>
                 </div>
-
                 <div class="d-grid gap-2">
                     <button onclick="placeOrder()" class="btn btn-primary btn-lg rounded-3 fw-bold py-3 shadow-sm">
                         Place Order
@@ -122,137 +148,79 @@
 </div>
 
 <script>
-    // 1. STATE MANAGEMENT
+    // --- STATE MANAGEMENT ---
     let cart = [];
+    let currentOrderType = 'dine-in';
 
-    // 2. ADD TO CART FUNCTION
-    function addToCart(id, name, price) {
-        // Check if item already exists in cart
-        const existingItem = cart.find(item => item.id === id);
-
-        if (existingItem) {
-            existingItem.quantity += 1;
+    // --- 1. SWITCH ORDER TYPE ---
+    function setOrderType(type) {
+        currentOrderType = type;
+        if(type === 'dine-in') {
+            document.getElementById('tab-dine-in').classList.add('active', 'bg-white', 'shadow-sm');
+            document.getElementById('tab-takeaway').classList.remove('active', 'bg-white', 'shadow-sm');
+            document.getElementById('tab-takeaway').classList.add('text-muted');
+            document.getElementById('dine-in-options').style.display = 'block';
         } else {
-            cart.push({ id: id, name: name, price: price, quantity: 1 });
+            document.getElementById('tab-takeaway').classList.add('active', 'bg-white', 'shadow-sm');
+            document.getElementById('tab-takeaway').classList.remove('text-muted');
+            document.getElementById('tab-dine-in').classList.remove('active', 'bg-white', 'shadow-sm');
+            document.getElementById('dine-in-options').style.display = 'none';
         }
-        renderCart();
     }
 
-    // 3. CHANGE QUANTITY (+/-)
-    function updateQuantity(id, change) {
-        const item = cart.find(item => item.id === id);
-        if (item) {
-            item.quantity += change;
-            if (item.quantity <= 0) {
-                cart = cart.filter(i => i.id !== id);
-            }
-        }
-        renderCart();
-    }
+    // --- 2. LIVE CHANGE CALCULATOR ---
+    function calculateChange() {
+        const cash = parseFloat(document.getElementById('cash-input').value) || 0;
+        const totalText = document.getElementById('cart-total').innerText.replace('Rs. ', '');
+        const total = parseFloat(totalText) || 0;
 
-    // 4. RENDER UI
-    function renderCart() {
-        const container = document.getElementById('cart-items-container');
-        const subtotalEl = document.getElementById('cart-subtotal');
-        const totalEl = document.getElementById('cart-total');
+        const change = cash - total;
+        const display = document.getElementById('change-display');
 
-        container.innerHTML = '';
-        let subtotal = 0;
+        display.innerText = `Rs. ${change.toFixed(2)}`;
 
-        if (cart.length === 0) {
-            container.innerHTML = `
-                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
-                    <i class="fa-solid fa-basket-shopping fa-3x opacity-25 mb-3"></i>
-                    <h6>No items selected</h6>
-                </div>`;
+        if(change < 0) {
+            display.classList.remove('text-success');
+            display.classList.add('text-danger');
         } else {
-            cart.forEach(item => {
-                const itemTotal = item.price * item.quantity;
-                subtotal += itemTotal;
-
-                const html = `
-                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-white rounded-3 shadow-sm">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                            <span class="fw-bold text-primary">${item.quantity}x</span>
-                        </div>
-                        <div>
-                            <h6 class="mb-0 fw-bold text-dark text-truncate" style="max-width: 120px;">${item.name}</h6>
-                            <small class="text-muted">Rs. ${item.price}</small>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <span class="fw-bold me-3">Rs. ${itemTotal}</span>
-                        <div class="btn-group btn-group-sm">
-                            <button onclick="updateQuantity(${item.id}, -1)" class="btn btn-light text-danger"><i class="fa fa-minus"></i></button>
-                            <button onclick="updateQuantity(${item.id}, 1)" class="btn btn-light text-success"><i class="fa fa-plus"></i></button>
-                        </div>
-                    </div>
-                </div>`;
-                container.innerHTML += html;
-            });
+            display.classList.remove('text-danger');
+            display.classList.add('text-success');
         }
-
-        subtotalEl.innerText = `Rs. ${subtotal.toFixed(2)}`;
-        totalEl.innerText = `Rs. ${subtotal.toFixed(2)}`;
     }
 
-    // 5. FILTER CATEGORIES
-    function filterCategory(catId) {
-        const items = document.querySelectorAll('.menu-item-card');
-        items.forEach(item => {
-            if (catId === 'all' || item.getAttribute('data-category') === catId) {
-                item.style.display = 'block';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    }
-
-    // 6. SEARCH FUNCTION
-    function filterMenu() {
-        const search = document.getElementById('search-input').value.toLowerCase();
-        const items = document.querySelectorAll('.menu-item-card');
-        items.forEach(item => {
-            const name = item.getAttribute('data-name');
-            if (name.includes(search)) {
-                item.style.display = 'block';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    }
-
-    // 7. PLACE ORDER (CONNECTED TO DJANGO)
+    // --- 3. PLACE ORDER LOGIC ---
     function placeOrder() {
-        if (cart.length === 0) {
-            alert("Cart is empty!");
-            return;
-        }
-        const tableId = document.getElementById('selected-table').value;
-        if (!tableId) {
-            alert("Please select a table first!");
-            return;
+        if (cart.length === 0) { alert("Cart is empty!"); return; }
+
+        const name = document.getElementById('cust-name').value;
+        const phone = document.getElementById('cust-phone').value;
+        const cashGiven = document.getElementById('cash-input').value;
+
+        let payload = {
+            cart: cart,
+            order_type: currentOrderType,
+            customer_name: name,
+            customer_phone: phone,
+            cash_given: cashGiven
+        };
+
+        if (currentOrderType === 'dine-in') {
+            const tableId = document.getElementById('selected-table').value;
+            if (!tableId) { alert("Please select a table!"); return; }
+            payload.table_id = tableId;
+        } else {
+            if (!name) { alert("Please enter Customer Name for Takeaway!"); return; }
         }
 
-        // Send Data to Backend
         fetch('/place-order/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                table_id: tableId,
-                cart: cart
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                alert(`Order #${data.order_id} placed successfully!`);
-                cart = []; // Clear cart
-                renderCart(); // Clear UI
-                location.reload(); // Reloads page to show table as occupied
+                window.location.href = `/order-success/${data.order_id}/`;
             } else {
                 alert("Error: " + data.message);
             }
@@ -263,8 +231,65 @@
         });
     }
 
-    // Set Date
-    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', dateOptions);
+    // --- 4. CART FUNCTIONS ---
+    function addToCart(id, name, price) {
+        const existingItem = cart.find(item => item.id === id);
+        if (existingItem) { existingItem.quantity += 1; }
+        else { cart.push({ id: id, name: name, price: price, quantity: 1 }); }
+        renderCart();
+    }
+
+    function updateQuantity(id, change) {
+        const item = cart.find(item => item.id === id);
+        if (item) {
+            item.quantity += change;
+            if (item.quantity <= 0) { cart = cart.filter(i => i.id !== id); }
+        }
+        renderCart();
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cart-items-container');
+        const totalEl = document.getElementById('cart-total');
+        container.innerHTML = '';
+        let subtotal = 0;
+
+        if (cart.length === 0) {
+            container.innerHTML = `<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"><i class="fa-solid fa-basket-shopping fa-3x opacity-25 mb-3"></i><h6>No items selected</h6></div>`;
+        } else {
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                container.innerHTML += `
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-white rounded-3 shadow-sm">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;"><span class="fw-bold text-primary">${item.quantity}x</span></div>
+                        <div><h6 class="mb-0 fw-bold text-dark text-truncate" style="max-width: 120px;">${item.name}</h6><small class="text-muted">Rs. ${item.price}</small></div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="fw-bold me-3">Rs. ${itemTotal}</span>
+                        <div class="btn-group btn-group-sm"><button onclick="updateQuantity(${item.id}, -1)" class="btn btn-light text-danger"><i class="fa fa-minus"></i></button><button onclick="updateQuantity(${item.id}, 1)" class="btn btn-light text-success"><i class="fa fa-plus"></i></button></div>
+                    </div>
+                </div>`;
+            });
+        }
+        totalEl.innerText = `Rs. ${subtotal.toFixed(2)}`;
+        calculateChange();
+    }
+
+    // Filter functions
+    function filterCategory(catId) {
+        document.querySelectorAll('.menu-item-card').forEach(item => {
+            item.style.display = (catId === 'all' || item.getAttribute('data-category') === catId) ? 'block' : 'none';
+        });
+    }
+    function filterMenu() {
+        const search = document.getElementById('search-input').value.toLowerCase();
+        document.querySelectorAll('.menu-item-card').forEach(item => {
+            item.style.display = item.getAttribute('data-name').includes(search) ? 'block' : 'none';
+        });
+    }
+
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 </script>
 {% endblock %}
